@@ -1,0 +1,42 @@
+# Relation Taxonomy (v0)
+
+Relations are typed, directional, and confidence-weighted.
+
+## Structural
+- CONTAINS
+- PART_OF
+- LOCATED_AT
+- ALIAS_OF
+
+## Lineage
+- DERIVED_FROM
+- GENERATED_BY
+- COPIED_FROM
+- VERSION_OF
+- REPLACES
+
+## Dependency
+- DEPENDS_ON
+- REQUIRES
+- PROVIDES
+- CONSUMES
+- PRODUCES
+
+## Semantic
+- SIMILAR_TO
+- REFERENCES
+- DESCRIBES
+- IMPLEMENTS
+
+## Claims & Conflict
+- ASSERTS
+- EVIDENCES
+- CONTRADICTS
+- INCOMPATIBLE_WITH
+- RISK_ASSOCIATED_WITH
+
+## Operational
+- RUNS_ON
+- CONFIGURES
+- OBSERVED_IN
+- TRIGGERED_BY
