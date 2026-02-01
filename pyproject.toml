@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "atlas-core"
+version = "0.1.0"
+description = "Universal ingestion, observation, and epistemic ledger system"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.11"
+authors = [
+    {name = "Atlas Team"}
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+keywords = ["ledger", "observation", "knowledge", "graph"]
+
+# No external dependencies - stdlib only
+dependencies = []
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+
+[project.scripts]
+atlas = "atlas.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/atlas/atlas-core"
+Documentation = "https://github.com/atlas/atlas-core/docs"
+
+[tool.setuptools]
+packages = ["atlas", "atlas.ledger", "atlas.eyes", "atlas.thread", 
+            "atlas.state", "atlas.index", "atlas.salience", 
+            "atlas.remote", "atlas.maintenance", "atlas.session"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+
+[tool.coverage.run]
+source = ["atlas"]
+omit = ["tests/*"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "raise NotImplementedError",
+]

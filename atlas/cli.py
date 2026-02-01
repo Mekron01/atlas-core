@@ -429,6 +429,47 @@ def cmd_archive(args) -> int:
     return 0
 
 
+def cmd_index_rebuild(args) -> int:
+    """
+    Rebuild SQLite index from snapshots.
+
+    Creates fast-lookup indexes (disposable, rebuildable).
+    """
+    from atlas.index.build import IndexBuilder
+
+    print("[atlas] Starting index rebuild")
+
+    state_dir = args.state_dir or get_state_dir()
+    builder = IndexBuilder(state_dir=str(state_dir))
+
+    # Determine snapshot paths
+    artifacts_path = args.artifacts
+    relations_path = args.relations
+
+    print(f"[atlas] State dir: {state_dir}")
+
+    # Rebuild
+    stats = builder.rebuild(
+        artifacts_snapshot=artifacts_path,
+        relations_snapshot=relations_path,
+    )
+
+    print("[atlas] Index rebuild complete:")
+    print(f"        Artifacts: {stats['artifacts']}")
+    print(f"        Relations: {stats['relations']}")
+    print(f"        Tags: {stats['tags']}")
+
+    return 0
+
+
+def cmd_version(args) -> int:
+    """Print version information."""
+    from atlas import __version__
+
+    print(f"atlas-core {__version__}")
+    return 0
+
+
 def main(argv=None) -> int:
     """Main entry point."""
     parser = argparse.ArgumentParser(
@@ -564,6 +605,41 @@ def main(argv=None) -> int:
         help="Archive files older than N days (default: 30)",
     )
     archive_parser.set_defaults(func=cmd_archive)
+
+    # index command
+    index_parser = subparsers.add_parser(
+        "index",
+        help="Manage SQLite index",
+    )
+    index_sub = index_parser.add_subparsers(
+        dest="index_command", required=True
+    )
+
+    # index rebuild subcommand
+    index_rebuild_parser = index_sub.add_parser(
+        "rebuild",
+        help="Rebuild index from snapshots",
+    )
+    index_rebuild_parser.add_argument(
+        "--artifacts",
+        type=str,
+        default=None,
+        help="Path to artifacts snapshot",
+    )
+    index_rebuild_parser.add_argument(
+        "--relations",
+        type=str,
+        default=None,
+        help="Path to relations snapshot",
+    )
+    index_rebuild_parser.set_defaults(func=cmd_index_rebuild)
+
+    # version command
+    version_parser = subparsers.add_parser(
+        "version",
+        help="Print version information",
+    )
+    version_parser.set_defaults(func=cmd_version)
 
     # Parse and dispatch
     args = parser.parse_args(argv)
