@@ -1,0 +1,52 @@
+# Atlas Configuration (Backbone Mode)
+# Manual run protocol, no remote, log-only observability
+
+mode: backbone
+
+# Phase 1: filesystem-only, manual runs
+protocol:
+  manual_runs_only: true
+  daemon_enabled: false
+  scheduler_enabled: false
+
+# Eyes configuration
+eyes:
+  filesystem:
+    enabled: true
+  git:
+    enabled: false      # Phase 2
+  database:
+    enabled: false      # Phase 3
+  remote_repo:
+    enabled: false      # Phase 4
+  web:
+    enabled: false      # Phase 4
+
+# Remote access
+remote:
+  allow_remote_access: false
+  max_remote_calls: 0
+
+# Observability
+observability:
+  salience: log-only    # compute but do not act
+  beliefs: disabled     # no belief events in backbone
+  telemetry: local      # local ledger only
+
+# Default budgets for scan
+budgets:
+  max_files: 50
+  max_depth: 6
+  max_bytes: 5000000
+  max_time_ms: 8000
+
+# Ledger
+ledger:
+  dir: atlas/ledger/events
+  format: jsonl
+  fsync: true
+
+# State
+state:
+  dir: atlas/state
+  snapshots: true

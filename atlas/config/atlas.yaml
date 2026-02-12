@@ -1,0 +1,3 @@
+# Atlas Configuration (Backbone Mode - internal copy)
+# See atlas.yaml in repo root for authoritative config
+mode: backbone

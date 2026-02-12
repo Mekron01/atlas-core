@@ -17,6 +17,7 @@ The ledger is the source of truth. Everything else is rebuildable.
 """
 
 __version__ = "0.1.0"
+__ATLAS_SCHEMA_VERSION__ = "v0"
 
 # Core schema
 from .schema import (

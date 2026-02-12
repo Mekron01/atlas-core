@@ -22,6 +22,37 @@ def get_state_dir() -> Path:
     return Path("atlas/state")
 
 
+def cmd_export(args) -> int:
+    """
+    Export current Atlas state.
+
+    Outputs state as JSON. Read-only, no side effects.
+    """
+    from atlas.integration import export_api
+    import json
+
+    ledger_dir = args.ledger_dir or str(get_ledger_dir())
+    state_dir = args.state_dir or str(get_state_dir())
+
+    data = export_api(ledger_dir=ledger_dir, state_dir=state_dir)
+
+    if args.json:
+        print(json.dumps(data, indent=2, default=str))
+    else:
+        print(f"state_id:        {data['state_id']}")
+        print(f"schema_version:  {data['schema_version']}")
+        print(f"version:         {data['version']}")
+        print(f"artifact_count:  {data['artifact_count']}")
+        print(f"relation_count:  {data['relation_count']}")
+        stats = data.get('ledger_stats', {})
+        print(f"event_count:     {stats.get('event_count', 0)}")
+        if stats.get('event_types'):
+            for et, cnt in sorted(stats['event_types'].items()):
+                print(f"  {et}: {cnt}")
+
+    return 0
+
+
 def cmd_scan(args) -> int:
     """
     Scan a directory and emit observation events.
@@ -30,6 +61,10 @@ def cmd_scan(args) -> int:
     """
     from atlas.eyes.filesystem import FilesystemEye
     from atlas.ledger.writer import EventWriter
+
+    # Enforce --no-remote (backbone mode)
+    if getattr(args, 'no_remote', False):
+        pass  # Already local-only for scan; flag is declarative
 
     target = Path(args.path).resolve()
 
@@ -76,15 +111,27 @@ def cmd_scan(args) -> int:
             self.max_bytes = max_bytes
             self.max_depth = max_depth
 
+    # Resolve time budget: --max-time-ms takes priority, then --max-time (seconds)
+    max_time_ms = None
+    if getattr(args, 'max_time_ms', None) is not None:
+        max_time_ms = args.max_time_ms
+    elif args.max_time is not None:
+        max_time_ms = args.max_time * 1000
+
     budget = SimpleBudget(
-        max_time_ms=args.max_time * 1000 if args.max_time else None,
+        max_time_ms=max_time_ms,
         max_files=args.max_files,
         max_bytes=args.max_bytes,
         max_depth=args.max_depth,
     )
 
+    # Salience mode
+    salience_mode = getattr(args, 'salience', 'log-only')
+
     print(f"[atlas] Budget: files={args.max_files}, "
           f"bytes={args.max_bytes}, depth={args.max_depth}")
+    if salience_mode:
+        print(f"[atlas] Salience: {salience_mode}")
 
     # Run filesystem eye
     eye = FilesystemEye(writer)
@@ -525,6 +572,23 @@ def main(argv=None) -> int:
         default=10,
         help="Maximum directory depth (default: 10)",
     )
+    scan_parser.add_argument(
+        "--max-time-ms",
+        type=int,
+        default=None,
+        help="Maximum time in milliseconds",
+    )
+    scan_parser.add_argument(
+        "--no-remote",
+        action="store_true",
+        help="Disable all remote access (backbone mode)",
+    )
+    scan_parser.add_argument(
+        "--salience",
+        type=str,
+        default="log-only",
+        help="Salience mode: log-only, active, disabled (default: log-only)",
+    )
     scan_parser.set_defaults(func=cmd_scan)
 
     # rebuild command
@@ -633,6 +697,18 @@ def main(argv=None) -> int:
         help="Path to relations snapshot",
     )
     index_rebuild_parser.set_defaults(func=cmd_index_rebuild)
+
+    # export command
+    export_parser = subparsers.add_parser(
+        "export",
+        help="Export current Atlas state",
+    )
+    export_parser.add_argument(
+        "--json",
+        action="store_true",
+        help="Output as JSON",
+    )
+    export_parser.set_defaults(func=cmd_export)
 
     # version command
     version_parser = subparsers.add_parser(
