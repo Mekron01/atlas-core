@@ -67,10 +67,7 @@ def project_artifacts(events: Iterable[dict]) -> dict[str, dict]:
         elif event_type == "FINGERPRINT_COMPUTED":
             _reduce_fingerprint(state, payload)
 
-        elif event_type == "ARTIFACT_CONTENT_EXTRACTED":
-            _reduce_extraction(state, payload)
-        
-        elif event_type == "EXTRACTION_PERFORMED":
+        elif event_type == "ARTIFACT_CONTENT_EXTRACTED" or event_type == "EXTRACTION_PERFORMED":
             _reduce_extraction(state, payload)
 
         elif event_type == "CONFIDENCE_UPDATED":
