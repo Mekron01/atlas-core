@@ -1,0 +1,78 @@
+Metadata-Version: 2.4
+Name: atlas-core
+Version: 0.1.0
+Summary: Universal ingestion, observation, and epistemic ledger system
+Author: Atlas Team
+License: MIT
+Project-URL: Homepage, https://github.com/atlas/atlas-core
+Project-URL: Documentation, https://github.com/atlas/atlas-core/docs
+Keywords: ledger,observation,knowledge,graph
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
+Classifier: Topic :: Software Development :: Libraries :: Python Modules
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+License-File: LICENSE
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.0; extra == "dev"
+Dynamic: license-file
+
+# Atlas Core
+
+Atlas Core is a **universal ingestion, observation, and epistemic ledger system**.
+
+It is not a crawler.
+It is not a tagger.
+It is not an AI.
+
+Atlas observes artifacts, records what was seen, tracks uncertainty, and preserves provenance over time.  
+It is designed to be **honest, auditable, and resilient to change**.
+
+## Core Principles
+
+- Append-only event ledger (truth is never overwritten)
+- Explicit uncertainty and confidence
+- Provenance-first design
+- Rebuildable state (snapshots are projections)
+- Silence by default (attention is earned)
+
+## What Atlas Does
+
+- Discovers artifacts (files, repos, databases, remote sources)
+- Fingerprints and extracts safely
+- Proposes meaning (tags, roles, relations) without asserting truth
+- Tracks change, conflict, and decay over time
+- Surfaces what matters via optional salience logic
+
+## What Atlas Does NOT Do
+
+- Execute code
+- Make plans or decisions
+- Generate goals
+- Assume correctness
+- Hide uncertainty
+
+## Architecture
+
+Atlas is composed of:
+- **Spine** – immutable ledger, identity, provenance
+- **Eyes** – pluggable scanners (read-only observers)
+- **Thread** – meaning proposals (tags, relations)
+- **Add-ons** – salience, sessions, explainability (optional)
+
+## Consumers
+
+Atlas Core is designed to be consumed by higher-level systems (e.g. reasoning engines, planners, world models).  
+Atlas never depends on its consumers.
+
+## Status
+
+This repository contains the build-ready v0 architecture and reference implementations.
+
+Stability > speed.
