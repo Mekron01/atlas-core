@@ -151,10 +151,14 @@ class FilesystemEye:
         stopped_reason = None
 
         # Extract budget limits with defaults
-        max_time_ms = getattr(budget, "max_time_ms", None) or float("inf")
-        max_files = getattr(budget, "max_files", None) or float("inf")
-        max_bytes = getattr(budget, "max_bytes", None) or float("inf")
-        max_depth = getattr(budget, "max_depth", None) or float("inf")
+        max_time_ms = getattr(budget, "max_time_ms", None)
+        max_time_ms = max_time_ms if max_time_ms is not None else float("inf")
+        max_files = getattr(budget, "max_files", None)
+        max_files = max_files if max_files is not None else float("inf")
+        max_bytes = getattr(budget, "max_bytes", None)
+        max_bytes = max_bytes if max_bytes is not None else float("inf")
+        max_depth = getattr(budget, "max_depth", None)
+        max_depth = max_depth if max_depth is not None else float("inf")
 
         def check_time_budget() -> bool:
             elapsed_ms = (time.time() - start_time) * 1000
@@ -163,6 +167,13 @@ class FilesystemEye:
         # Walk directory tree
         try:
             for path in root_path.rglob("*"):
+                # Skip ledger directory to avoid self-observation
+                try:
+                    if self.writer.ledger_dir and path.is_relative_to(self.writer.ledger_dir):
+                        continue
+                except (AttributeError, ValueError):
+                    pass
+                
                 # Skip non-files
                 if not path.is_file():
                     continue
@@ -189,12 +200,12 @@ class FilesystemEye:
                         current_value=files_seen,
                         session_id=session_id,
                     )
-                    stopped_reason = "file_budget_exceeded"
+                    stopped_reason = "max_files"
                     break
 
                 # Check depth (skip silently if too deep)
                 depth = self._get_depth(path, root_path)
-                if depth > max_depth:
+                if depth >= max_depth:
                     continue
 
                 # Get file size
@@ -212,7 +223,7 @@ class FilesystemEye:
                         current_value=bytes_accounted,
                         session_id=session_id,
                     )
-                    stopped_reason = "byte_budget_exceeded"
+                    stopped_reason = "max_bytes"
                     break
 
                 # Compute hash (first 4096 bytes only)

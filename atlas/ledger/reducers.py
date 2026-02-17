@@ -29,6 +29,9 @@ def project_artifacts(events: Iterable[dict]) -> dict[str, dict]:
 
     for event in events:
         artifact_id = event.get("artifact_id")
+        # Also check payload if not found at root level
+        if not artifact_id:
+            artifact_id = event.get("payload", {}).get("artifact_id")
         if not artifact_id:
             continue
 
@@ -64,7 +67,7 @@ def project_artifacts(events: Iterable[dict]) -> dict[str, dict]:
         elif event_type == "FINGERPRINT_COMPUTED":
             _reduce_fingerprint(state, payload)
 
-        elif event_type == "ARTIFACT_CONTENT_EXTRACTED":
+        elif event_type == "ARTIFACT_CONTENT_EXTRACTED" or event_type == "EXTRACTION_PERFORMED":
             _reduce_extraction(state, payload)
 
         elif event_type == "CONFIDENCE_UPDATED":
@@ -79,12 +82,20 @@ def _reduce_artifact_seen(
     state: dict, payload: dict, event: dict
 ) -> None:
     """Reduce ARTIFACT_SEEN event."""
+    # Support both "path" and "locator" for location
     if "path" in payload:
         state["locator"] = payload["path"]
+    elif "locator" in payload:
+        state["locator"] = payload["locator"]
+    
     if "content_hash" in payload:
         state["fingerprint"] = payload["content_hash"]
     if "confidence" in event:
         state["confidence"] = event["confidence"]
+    
+    # Store size_bytes if present in payload
+    if "size_bytes" in payload:
+        state["size_bytes"] = payload["size_bytes"]
 
 
 def _reduce_artifact_observed(
@@ -105,11 +116,21 @@ def _reduce_fingerprint(state: dict, payload: dict) -> None:
         state["fingerprint"] = payload["hash"]
     elif "fingerprint" in payload:
         state["fingerprint"] = payload["fingerprint"]
+    elif "content_hash" in payload:
+        state["fingerprint"] = payload["content_hash"]
 
 
 def _reduce_extraction(state: dict, payload: dict) -> None:
-    """Reduce ARTIFACT_CONTENT_EXTRACTED event."""
+    """Reduce ARTIFACT_CONTENT_EXTRACTED or EXTRACTION_PERFORMED event."""
     extraction = {}
+    
+    # Handle test event structure
+    if "extraction_depth" in payload:
+        extraction["depth"] = payload["extraction_depth"]
+    if "extracted_metadata" in payload:
+        extraction["metadata"] = payload["extracted_metadata"]
+    
+    # Handle original event structure
     if "content_type" in payload:
         extraction["content_type"] = payload["content_type"]
     if "size" in payload:
@@ -118,6 +139,7 @@ def _reduce_extraction(state: dict, payload: dict) -> None:
         extraction["summary"] = payload["summary"]
     if "symbols" in payload:
         extraction["symbols"] = payload["symbols"]
+    
     if extraction:
         state["extraction"] = extraction
 
